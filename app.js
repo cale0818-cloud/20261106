@@ -2,7 +2,7 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
 // Firebase Console > Project settings > Your apps. Replace with your project's web config.
-const firebaseConfig = window.DAYMARK_FIREBASE_CONFIG || { apiKey: 'YOUR_FIREBASE_API_KEY', authDomain: 'YOUR_FIREBASE_PROJECT_ID.firebaseapp.com', projectId: 'YOUR_FIREBASE_PROJECT_ID', appId: 'YOUR_FIREBASE_APP_ID' };
+const firebaseConfig = window.DAYMARK_FIREBASE_CONFIG || { apiKey: 'AIzaSyCVVhCox84oA6BIoivU5YHoMGxyTmk-Yb8', authDomain: 'daymark-personal-planner.firebaseapp.com', projectId: 'daymark-personal-planner', appId: '1:885690152648:web:7513a23cb11337a2ea97fd' };
 const firebaseConfigured = Object.values(firebaseConfig).every(value => typeof value === 'string' && value && !value.startsWith('YOUR_'));
 const authGate = document.getElementById('authGate');
 const authMessage = document.getElementById('authMessage');
