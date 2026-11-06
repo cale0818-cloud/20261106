@@ -1,3 +1,55 @@
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+
+// Firebase Console > Project settings > Your apps. Replace with your project's web config.
+const firebaseConfig = window.DAYMARK_FIREBASE_CONFIG || { apiKey: 'YOUR_FIREBASE_API_KEY', authDomain: 'YOUR_FIREBASE_PROJECT_ID.firebaseapp.com', projectId: 'YOUR_FIREBASE_PROJECT_ID', appId: 'YOUR_FIREBASE_APP_ID' };
+const firebaseConfigured = Object.values(firebaseConfig).every(value => typeof value === 'string' && value && !value.startsWith('YOUR_'));
+const authGate = document.getElementById('authGate');
+const authMessage = document.getElementById('authMessage');
+const googleSignInButton = document.getElementById('googleSignIn');
+let firebaseAuth;
+function showAuthError(error) {
+  const messages = { 'auth/unauthorized-domain': '此網域尚未加入 Firebase 授權網域。請在 Firebase Authentication 的設定中加入 cale0818-cloud.github.io。', 'auth/popup-blocked': '登入視窗遭封鎖，請允許此網站開啟彈出視窗後重試。', 'auth/popup-closed-by-user': '登入視窗已關閉，尚未完成登入。', 'auth/network-request-failed': '網路連線失敗，請檢查連線後重試。' };
+  authMessage.textContent = messages[error?.code] || (error?.message || '登入失敗，請稍後再試。');
+  googleSignInButton.disabled = false;
+}
+if (!firebaseConfigured) {
+  document.body.classList.add('auth-signed-out');
+  authMessage.textContent = '尚未設定 Firebase：請在 app.js 填入 Firebase Web App 設定，並啟用 Google 登入提供者。';
+  googleSignInButton.disabled = true;
+} else {
+  const firebaseApp = initializeApp(firebaseConfig);
+  firebaseAuth = getAuth(firebaseApp);
+  const googleProvider = new GoogleAuthProvider();
+  googleSignInButton.addEventListener('click', async () => {
+    googleSignInButton.disabled = true;
+    authMessage.textContent = '正在連線至 Google…';
+    try { await signInWithPopup(firebaseAuth, googleProvider); }
+    catch (error) {
+      if (error.code === 'auth/popup-blocked' || error.code === 'auth/operation-not-supported-in-this-environment') { try { await signInWithRedirect(firebaseAuth, googleProvider); return; } catch (redirectError) { showAuthError(redirectError); return; } }
+      showAuthError(error);
+    }
+  });
+  document.getElementById('signOutBtn').addEventListener('click', async () => { try { await signOut(firebaseAuth); } catch (error) { showAuthError(error); } });
+  getRedirectResult(firebaseAuth).catch(showAuthError);
+  onAuthStateChanged(firebaseAuth, user => {
+    if (user) {
+      document.body.classList.remove('auth-pending', 'auth-signed-out');
+      document.body.classList.add('auth-signed-in');
+      document.getElementById('userDisplayName').textContent = user.displayName || '個人工作區';
+      document.getElementById('userDisplayEmail').textContent = user.email || 'Google 帳戶';
+      const avatar = document.getElementById('signOutBtn');
+      if (user.photoURL) { avatar.textContent = ''; avatar.style.backgroundImage = 'url("' + user.photoURL.replace(/["\\]/g, '') + '")'; avatar.style.backgroundSize = 'cover'; }
+      else avatar.textContent = (user.displayName || user.email || 'U').slice(0, 1).toUpperCase();
+    } else {
+      document.body.classList.remove('auth-pending', 'auth-signed-in');
+      document.body.classList.add('auth-signed-out');
+      authMessage.textContent = '登入個人工作區，查看你的日序。';
+      googleSignInButton.disabled = false;
+    }
+  });
+}
+
 const today=new Date();const localISO=date=>{const d=new Date(date);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};const dateISO=localISO(today);const plusDays=n=>{const d=new Date();d.setDate(d.getDate()+n);return localISO(d)};const fmtDate=(iso,options={month:'numeric',day:'numeric'})=>new Intl.DateTimeFormat('zh-TW',options).format(new Date(`${iso}T12:00:00`));const weekdayLong=new Intl.DateTimeFormat('zh-TW',{weekday:'long'}).format(today);
 let tasks=[{id:1,title:'完成品牌提案簡報',date:dateISO,time:'10:30',category:'工作',priority:'high',done:false},{id:2,title:'回覆產品設計師信件',date:dateISO,time:'',category:'工作',priority:'medium',done:false},{id:3,title:'預約下週牙醫',date:dateISO,time:'',category:'生活',priority:'low',done:true},{id:4,title:'整理本週會議紀錄',date:dateISO,time:'',category:'工作',priority:'medium',done:false},{id:5,title:'繳交線上課程作業',date:plusDays(1),time:'18:00',category:'學習',priority:'high',done:false},{id:6,title:'每月預算檢視',date:plusDays(3),time:'',category:'生活',priority:'low',done:false}];
 const events=[{time:'09:00',title:'晨間規劃與咖啡',meta:'個人時間 · 30 分鐘',type:'lav',tag:'例行'},{time:'10:30',title:'完成品牌提案簡報',meta:'工作 · 預計 1 小時',type:'orange',tag:'重要'},{time:'13:30',title:'產品設計週會',meta:'會議室 A · 60 分鐘',type:'',tag:'工作'},{time:'15:00',title:'專注時段：設計研究',meta:'工作 · 90 分鐘',type:'lav',tag:'專注'},{time:'17:30',title:'下班散步',meta:'健康 · 30 分鐘',type:'',tag:'習慣'}];
